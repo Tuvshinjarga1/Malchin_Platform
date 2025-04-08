@@ -54,7 +54,7 @@ export default function HerderProducts() {
         try {
           const result = await getHerderProducts(currentUser.id);
           if (result.success) {
-            setProducts(result.products);
+            setProducts(result.products || []);
           }
         } catch (error) {
           console.error("Error fetching herder products:", error);

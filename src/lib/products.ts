@@ -14,9 +14,9 @@ import {
   DocumentSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "./firebase";
+import { db } from "./firebase";
 import { Product } from "@/types";
+import { uploadImage } from "./images";
 
 // Шинэ бүтээгдэхүүн нэмэх
 export const addProduct = async (
@@ -28,12 +28,15 @@ export const addProduct = async (
     const productRef = doc(collection(db, "products"));
     const productId = productRef.id;
 
-    // Зургуудыг Storage руу upload хийх
+    // Зургуудыг ImgBB руу upload хийх
     const imageUrls = await Promise.all(
-      imageFiles.map(async (file, index) => {
-        const imageRef = ref(storage, `products/${productId}/${index}`);
-        await uploadBytes(imageRef, file);
-        return getDownloadURL(imageRef);
+      imageFiles.map(async (file) => {
+        try {
+          return await uploadImage(file);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          throw new Error("Зураг хуулахад алдаа гарлаа");
+        }
       })
     );
 
