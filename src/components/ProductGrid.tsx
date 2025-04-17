@@ -6,13 +6,22 @@ import Image from "next/image";
 import { FaShoppingCart } from "react-icons/fa";
 import { getApprovedProducts } from "@/lib/products";
 import { Product } from "@/types";
+import { useCart } from "@/context/CartContext";
 
 interface ProductGridProps {
   category: string | null;
   limit?: number;
+  subcategory?: string | null;
+  searchTerm?: string;
 }
 
-const ProductGrid = ({ category, limit = 12 }: ProductGridProps) => {
+const ProductGrid = ({
+  category,
+  limit = 12,
+  subcategory = null,
+  searchTerm = "",
+}: ProductGridProps) => {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +33,9 @@ const ProductGrid = ({ category, limit = 12 }: ProductGridProps) => {
         const result = await getApprovedProducts(
           null,
           limit,
-          category || undefined
+          category || undefined,
+          subcategory || undefined,
+          searchTerm || undefined
         );
         if (result.success) {
           setProducts(result.products || []);
@@ -40,7 +51,11 @@ const ProductGrid = ({ category, limit = 12 }: ProductGridProps) => {
     };
 
     fetchProducts();
-  }, [category, limit]);
+  }, [category, limit, subcategory, searchTerm]);
+
+  const handleAddToCart = (product: Product) => {
+    addToCart(product, 1);
+  };
 
   if (loading) {
     return (
@@ -110,12 +125,21 @@ const ProductGrid = ({ category, limit = 12 }: ProductGridProps) => {
                     / {product.unit}
                   </span>
                 </span>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full">
-                  <FaShoppingCart className="h-4 w-4" />
-                </button>
               </div>
             </div>
           </Link>
+          <div className="px-4 pb-4">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                handleAddToCart(product);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md flex items-center justify-center"
+            >
+              <FaShoppingCart className="h-4 w-4 mr-2" />
+              Сагсанд нэмэх
+            </button>
+          </div>
         </div>
       ))}
     </div>

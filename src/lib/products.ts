@@ -119,9 +119,12 @@ export const getHerderProducts = async (herderId: string) => {
 export const getApprovedProducts = async (
   lastDoc: DocumentSnapshot | null = null,
   pageSize = 10,
-  category?: string
+  category?: string,
+  subcategory?: string,
+  searchTerm?: string
 ) => {
   try {
+    // Firestore-ийн үндсэн query
     let productsQuery = query(
       collection(db, "products"),
       where("status", "==", "approved"),
@@ -138,6 +141,18 @@ export const getApprovedProducts = async (
         orderBy("createdAt", "desc"),
         limit(pageSize)
       );
+
+      // Хэрэв subcategory мөн байвал filter хийх
+      if (subcategory) {
+        productsQuery = query(
+          collection(db, "products"),
+          where("status", "==", "approved"),
+          where("category", "==", category),
+          where("subCategory", "==", subcategory),
+          orderBy("createdAt", "desc"),
+          limit(pageSize)
+        );
+      }
     }
 
     // Pagination
@@ -146,11 +161,24 @@ export const getApprovedProducts = async (
     }
 
     const querySnapshot = await getDocs(productsQuery);
-    const products: Product[] = [];
+    let products: Product[] = [];
 
     querySnapshot.forEach((doc) => {
       products.push(doc.data() as Product);
     });
+
+    // Хэрэв хайлт байвал client side дээр filter хийх
+    // (Firestore дээр текстээр хайх боломжгүй тул)
+    if (searchTerm && searchTerm.trim() !== "") {
+      const searchLower = searchTerm.toLowerCase();
+      products = products.filter((product) => {
+        return (
+          product.title.toLowerCase().includes(searchLower) ||
+          product.description.toLowerCase().includes(searchLower) ||
+          product.herderName.toLowerCase().includes(searchLower)
+        );
+      });
+    }
 
     const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
 

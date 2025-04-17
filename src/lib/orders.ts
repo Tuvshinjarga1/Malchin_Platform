@@ -8,35 +8,102 @@ import {
   where,
   updateDoc,
   orderBy,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Order, Product } from "@/types";
 
+interface OrderInput {
+  customerId: string;
+  customerName: string;
+  products: {
+    productId: string;
+    quantity: number;
+    price: number;
+    title: string;
+  }[];
+  totalAmount: number;
+  contactPhone: string;
+  deliveryAddress: string;
+  notes?: string;
+}
+
+interface OrderResult {
+  success: boolean;
+  orderId?: string;
+  error?: string;
+}
+
 // Захиалга үүсгэх
-export const createOrder = async (
-  orderData: Omit<Order, "id" | "createdAt" | "updatedAt" | "status">
-) => {
+export async function createOrder(orderData: OrderInput): Promise<OrderResult> {
   try {
-    // Firestore дээр захиалгын документ үүсгэх
-    const orderRef = doc(collection(db, "orders"));
-    const orderId = orderRef.id;
+    // Бүтээгдэхүүний эзэмшигчийн ID олох (эхний бүтээгдэхүүний эзнийг авъя)
+    if (orderData.products.length === 0) {
+      return {
+        success: false,
+        error: "Бүтээгдэхүүн сонгогдоогүй байна",
+      };
+    }
 
-    // Захиалгын мэдээллийг хадгалах
-    const timestamp = Date.now();
-    await setDoc(orderRef, {
-      ...orderData,
-      id: orderId,
+    const firstProductId = orderData.products[0].productId;
+    const productRef = doc(db, "products", firstProductId);
+    const productSnap = await getDoc(productRef);
+
+    if (!productSnap.exists()) {
+      return {
+        success: false,
+        error: "Бүтээгдэхүүн олдсонгүй",
+      };
+    }
+
+    const productData = productSnap.data();
+    const herderId = productData.herderId;
+
+    const now = Date.now();
+
+    const newOrder: Omit<Order, "id"> = {
+      customerId: orderData.customerId,
+      customerName: orderData.customerName,
+      herderId: herderId,
+      products: orderData.products,
+      totalAmount: orderData.totalAmount,
       status: "pending",
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    });
+      createdAt: now,
+      updatedAt: now,
+      contactPhone: orderData.contactPhone,
+      deliveryAddress: orderData.deliveryAddress,
+    };
 
-    return { success: true, orderId };
-  } catch (error: any) {
-    console.error("Error creating order:", error);
-    return { success: false, error: error.message };
+    const orderRef = await addDoc(collection(db, "orders"), newOrder);
+
+    // Бүтээгдэхүүний үлдэгдлийг шинэчлэх
+    for (const item of orderData.products) {
+      const productRef = doc(db, "products", item.productId);
+      const productSnap = await getDoc(productRef);
+
+      if (productSnap.exists()) {
+        const productData = productSnap.data();
+        const newQuantity = Math.max(0, productData.quantity - item.quantity);
+
+        await updateDoc(productRef, {
+          quantity: newQuantity,
+          updatedAt: now,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      orderId: orderRef.id,
+    };
+  } catch (error) {
+    console.error("Захиалга үүсгэхэд алдаа гарлаа:", error);
+    return {
+      success: false,
+      error: "Захиалга үүсгэхэд алдаа гарлаа",
+    };
   }
-};
+}
 
 // Захиалгын мэдээллийг авах
 export const getOrder = async (orderId: string): Promise<Order | null> => {
@@ -71,10 +138,11 @@ export const updateOrderStatus = async (
 };
 
 // Хэрэглэгчийн бүх захиалгыг авах
-export const getCustomerOrders = async (customerId: string) => {
+export async function getCustomerOrders(customerId: string): Promise<Order[]> {
   try {
+    const ordersRef = collection(db, "orders");
     const q = query(
-      collection(db, "orders"),
+      ordersRef,
       where("customerId", "==", customerId),
       orderBy("createdAt", "desc")
     );
@@ -83,15 +151,18 @@ export const getCustomerOrders = async (customerId: string) => {
     const orders: Order[] = [];
 
     querySnapshot.forEach((doc) => {
-      orders.push(doc.data() as Order);
+      orders.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Order);
     });
 
-    return { success: true, orders };
-  } catch (error: any) {
-    console.error("Error getting customer orders:", error);
-    return { success: false, error: error.message };
+    return orders;
+  } catch (error) {
+    console.error("Захиалга авахад алдаа гарлаа:", error);
+    return [];
   }
-};
+}
 
 // Малчны бүх захиалгыг авах
 export const getHerderOrders = async (herderId: string) => {
@@ -115,3 +186,22 @@ export const getHerderOrders = async (herderId: string) => {
     return { success: false, error: error.message };
   }
 };
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+
+    if (orderSnap.exists()) {
+      return {
+        id: orderSnap.id,
+        ...orderSnap.data(),
+      } as Order;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Захиалга дэлгэрэнгүй авахад алдаа гарлаа:", error);
+    return null;
+  }
+}
