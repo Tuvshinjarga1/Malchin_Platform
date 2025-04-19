@@ -2,6 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaShoppingCart, FaLeaf, FaHandshake } from "react-icons/fa";
 import ProductGrid from "@/components/ProductGrid";
+import dynamic from "next/dynamic";
+
+// AI компонентуудыг клиент талд рендерлэхийн тулд dynamic импорт хийж байна
+const AIChatbot = dynamic(() => import("@/components/AIChatbot"), {
+  // ssr: false,
+});
+
+const AIPriceForecast = dynamic(() => import("@/components/AIPriceForecast"), {
+  // ssr: false,
+});
 
 export default function Home() {
   return (
@@ -81,6 +91,12 @@ export default function Home() {
         </div>
       </div>
 
+      {/* AI Price Forecast section */}
+      <div className="py-16 container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8">AI Үнийн Таамаглал</h2>
+        <AIPriceForecast />
+      </div>
+
       {/* Recent Products section */}
       <div className="py-16 container mx-auto px-4">
         <h2 className="text-3xl font-bold mb-8">Шинэ бүтээгдэхүүнүүд</h2>
@@ -141,6 +157,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 }

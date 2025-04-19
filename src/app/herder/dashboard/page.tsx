@@ -8,6 +8,12 @@ import { getHerderProducts } from "@/lib/products";
 import { getHerderOrders } from "@/lib/orders";
 import { Product, Order } from "@/types";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+// AI компонентийг динамикаар импортлох
+const AIHerderAdvisor = dynamic(() => import("@/components/AIHerderAdvisor"), {
+  // ssr: false,
+});
 
 export default function HerderDashboard() {
   const { currentUser, userRole, loading } = useAuth();
@@ -89,6 +95,11 @@ export default function HerderDashboard() {
           Таны хянах самбарт тавтай морил. Энд та өөрийн бүтээгдэхүүн болон
           захиалгуудыг харж, удирдах боломжтой.
         </p>
+      </div>
+
+      {/* AI Herder Advisor */}
+      <div className="mb-8">
+        <AIHerderAdvisor />
       </div>
 
       {/* Stats */}
@@ -225,14 +236,8 @@ export default function HerderDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {/* {orders.slice(0, 5).map((order, index) => ( */}
                 {orders.slice(0, 5).map((order) => (
-                  // {orders.slice(0, 5).map((order, index) => (
-                  <tr
-                    key={order.id}
-                    // key={order.id || `order-${index}`}
-                    className="hover:bg-gray-50"
-                  >
+                  <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link href={`/herder/orders/${order.id}`}>
                         {order.id}
@@ -250,35 +255,25 @@ export default function HerderDashboard() {
                           ${
                             order.status === "pending"
                               ? "bg-yellow-100 text-yellow-800"
-                              : ""
-                          }
-                          ${
-                            order.status === "confirmed"
+                              : order.status === "confirmed"
                               ? "bg-green-100 text-green-800"
-                              : ""
-                          }
-                          ${
-                            order.status === "shipped"
-                              ? "bg-blue-100 text-blue-800"
-                              : ""
-                          }
-                          ${
-                            order.status === "delivered"
-                              ? "bg-purple-100 text-purple-800"
-                              : ""
-                          }
-                          ${
-                            order.status === "cancelled"
+                              : order.status === "cancelled"
                               ? "bg-red-100 text-red-800"
-                              : ""
+                              : order.status === "delivered"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                           }
-                          `}
+                        `}
                       >
-                        {order.status === "pending" && "Хүлээгдэж байна"}
-                        {order.status === "confirmed" && "Баталгаажсан"}
-                        {order.status === "shipped" && "Илгээгдсэн"}
-                        {order.status === "delivered" && "Хүргэгдсэн"}
-                        {order.status === "cancelled" && "Цуцлагдсан"}
+                        {order.status === "pending"
+                          ? "Хүлээгдэж буй"
+                          : order.status === "confirmed"
+                          ? "Баталгаажсан"
+                          : order.status === "cancelled"
+                          ? "Цуцлагдсан"
+                          : order.status === "delivered"
+                          ? "Хүргэгдсэн"
+                          : order.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -288,21 +283,22 @@ export default function HerderDashboard() {
                 ))}
               </tbody>
             </table>
-            {orders.length > 5 && (
-              <div className="mt-4 text-center">
-                <Link
-                  href="/herder/orders"
-                  className="text-green-600 hover:underline"
-                >
-                  Бүх захиалгыг харах &rarr;
-                </Link>
-              </div>
-            )}
           </div>
         ) : (
           <p className="text-gray-500 text-center py-4">
             Одоогоор захиалга байхгүй байна.
           </p>
+        )}
+
+        {orders.length > 0 && (
+          <div className="mt-4 text-right">
+            <Link
+              href="/herder/orders"
+              className="text-sm text-green-600 hover:underline inline-block"
+            >
+              Бүх захиалга үзэх &rarr;
+            </Link>
+          </div>
         )}
       </div>
     </div>
