@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth";
+import { useRouter, useSearchParams } from "next/navigation";
+import { loginUser } from "@/lib/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
@@ -12,13 +12,16 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currentUser } = useAuth();
+  const redirectPath = searchParams.get("redirect") || "/";
 
-  // Хэрэв хэрэглэгч нэвтэрсэн бол нүүр хуудас руу шилжүүлэх
-  if (currentUser) {
-    router.push("/");
-    return null;
-  }
+  // Хэрэв хэрэглэгч нэвтэрсэн бол redirectPath руу шилжүүлэх
+  useEffect(() => {
+    if (currentUser) {
+      router.push(redirectPath);
+    }
+  }, [currentUser, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +29,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const result = await signIn(email, password);
+      const result = await loginUser(email, password);
 
       if (result.success) {
-        router.push("/");
+        router.push(redirectPath);
       } else {
         setError(result.error || "Нэвтрэх үед алдаа гарлаа");
       }

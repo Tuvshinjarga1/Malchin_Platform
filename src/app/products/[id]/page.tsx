@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { FaArrowLeft, FaMinus, FaPlus, FaShoppingCart } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaMinus,
+  FaPlus,
+  FaShoppingCart,
+  FaCheck,
+} from "react-icons/fa";
 import { getProduct } from "@/lib/products";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
@@ -20,6 +26,11 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -41,8 +52,10 @@ export default function ProductDetailPage() {
       }
     };
 
-    fetchProduct();
-  }, [params.id]);
+    if (isClient) {
+      fetchProduct();
+    }
+  }, [params.id, isClient]);
 
   const handleQuantityChange = (value: number) => {
     if (value < 1) return;
@@ -53,16 +66,28 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
 
-    setIsAddingToCart(true);
-    addToCart(product, quantity);
+    console.log(
+      "ProductDetailPage handleAddToCart called for product:",
+      product.title,
+      "quantity:",
+      quantity
+    );
+    try {
+      setIsAddingToCart(true);
+      addToCart(product, quantity);
+      console.log("Added product to cart successfully");
 
-    // Add to cart animation effect
-    setTimeout(() => {
+      // Add to cart animation effect
+      setTimeout(() => {
+        setIsAddingToCart(false);
+      }, 1500);
+    } catch (err) {
+      console.error("Error when adding product to cart:", err);
       setIsAddingToCart(false);
-    }, 1000);
+    }
   };
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-6xl">
         <div className="flex flex-col md:flex-row gap-8">
@@ -216,7 +241,10 @@ export default function ProductDetailPage() {
               {product.quantity === 0 ? (
                 "Үлдэгдэлгүй"
               ) : isAddingToCart ? (
-                "Нэмэгдлээ!"
+                <>
+                  <FaCheck className="mr-2" />
+                  Нэмэгдлээ!
+                </>
               ) : (
                 <>
                   <FaShoppingCart className="mr-2" />

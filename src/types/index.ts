@@ -42,4 +42,5 @@ export interface Order {
   updatedAt: number;
   contactPhone: string;
   deliveryAddress: string;
+  notes?: string;
 }

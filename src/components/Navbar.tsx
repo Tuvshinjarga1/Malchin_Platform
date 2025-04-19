@@ -44,8 +44,8 @@ const Navbar = () => {
     { href: "/products", label: "Бүтээгдэхүүн" },
     { href: "/products/meat", label: "Мах" },
     { href: "/products/dairy", label: "Цагаан идээ" },
-    { href: "/about", label: "Бидний тухай" },
-    { href: "/contact", label: "Холбоо барих" },
+    // { href: "/about", label: "Бидний тухай" },
+    // { href: "/contact", label: "Холбоо барих" },
   ];
 
   const userNavigation = currentUser ? (
@@ -99,19 +99,19 @@ const Navbar = () => {
           {userRole === "customer" && (
             <>
               <Link
-                href="/account"
+                href="/profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 Миний бүртгэл
               </Link>
-              <Link
+              {/* <Link
                 href="/orders"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 Миний захиалгууд
-              </Link>
+              </Link> */}
             </>
           )}
 
@@ -269,13 +269,13 @@ const Navbar = () => {
                       >
                         Миний бүртгэл
                       </Link>
-                      <Link
+                      {/* <Link
                         href="/orders"
                         className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-green-600"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Миний захиалгууд
-                      </Link>
+                      </Link> */}
                     </>
                   )}
 

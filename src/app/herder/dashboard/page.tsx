@@ -35,13 +35,14 @@ export default function HerderDashboard() {
           // Бүх бүтээгдэхүүнийг авах
           const productsResult = await getHerderProducts(currentUser.id);
           if (productsResult.success) {
-            setProducts(productsResult.products);
+            setProducts(productsResult.products || []);
           }
 
           // Захиалгуудыг авах
           const ordersResult = await getHerderOrders(currentUser.id);
+          // console.log(ordersResult.orders);
           if (ordersResult.success) {
-            setOrders(ordersResult.orders);
+            setOrders(ordersResult.orders || []);
           }
         } catch (error) {
           console.error("Error fetching herder data:", error);
@@ -224,11 +225,17 @@ export default function HerderDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
+                {/* {orders.slice(0, 5).map((order, index) => ( */}
                 {orders.slice(0, 5).map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  // {orders.slice(0, 5).map((order, index) => (
+                  <tr
+                    key={order.id}
+                    // key={order.id || `order-${index}`}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                       <Link href={`/herder/orders/${order.id}`}>
-                        {order.id.substring(0, 8)}...
+                        {order.id}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -240,32 +247,32 @@ export default function HerderDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${
-                          order.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : ""
-                        }
-                        ${
-                          order.status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : ""
-                        }
-                        ${
-                          order.status === "shipped"
-                            ? "bg-blue-100 text-blue-800"
-                            : ""
-                        }
-                        ${
-                          order.status === "delivered"
-                            ? "bg-purple-100 text-purple-800"
-                            : ""
-                        }
-                        ${
-                          order.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : ""
-                        }
-                        `}
+                          ${
+                            order.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : ""
+                          }
+                          ${
+                            order.status === "confirmed"
+                              ? "bg-green-100 text-green-800"
+                              : ""
+                          }
+                          ${
+                            order.status === "shipped"
+                              ? "bg-blue-100 text-blue-800"
+                              : ""
+                          }
+                          ${
+                            order.status === "delivered"
+                              ? "bg-purple-100 text-purple-800"
+                              : ""
+                          }
+                          ${
+                            order.status === "cancelled"
+                              ? "bg-red-100 text-red-800"
+                              : ""
+                          }
+                          `}
                       >
                         {order.status === "pending" && "Хүлээгдэж байна"}
                         {order.status === "confirmed" && "Баталгаажсан"}

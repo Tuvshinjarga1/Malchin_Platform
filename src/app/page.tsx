@@ -8,13 +8,13 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero section */}
       <div className="relative h-[70vh] w-full">
-        {/* <Image
-          src="/images/hero.jpg"
+        <Image
+          src="/ger.jpg"
           alt="Монгол малчин"
           fill
-          style={{ objectFit: "cover" }}
+          style={{ objectFit: "contain", objectPosition: "bottom" }}
           priority
-        /> */}
+        />
         <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 text-center">
             Малчдаас шууд танд

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { getCustomerOrders } from "@/lib/orders";
 import { Order } from "@/types";
 import {
@@ -21,17 +22,26 @@ import { auth } from "@/lib/firebase";
 export default function ProfilePage() {
   const router = useRouter();
   const { currentUser, loading } = useAuth();
+  const { items } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
+  // Клиент-талын рендер
   useEffect(() => {
-    if (!loading && !currentUser) {
+    setIsClient(true);
+  }, []);
+
+  // Хэрэглэгч нэвтрээгүй бол login хуудас руу чиглүүлнэ
+  useEffect(() => {
+    if (isClient && !loading && !currentUser) {
       router.push("/login?redirect=/profile");
-    } else if (currentUser) {
+    } else if (isClient && currentUser) {
       fetchOrders();
     }
-  }, [currentUser, loading, router]);
+  }, [currentUser, loading, router, isClient]);
 
+  // Захиалгуудыг авах функц
   const fetchOrders = async () => {
     if (!currentUser) return;
 
@@ -55,7 +65,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading || !currentUser) {
+  if (!isClient || loading || !currentUser) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">Ачаалж байна...</div>
@@ -160,6 +170,39 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+
+          {/* Сагсны мэдээлэл */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium">Таны сагс</h2>
+              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                {items.length} бүтээгдэхүүн
+              </span>
+            </div>
+
+            {items.length === 0 ? (
+              <p className="text-gray-500 text-sm">Таны сагс хоосон байна</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-gray-700">
+                  Нийт дүн:{" "}
+                  {items
+                    .reduce(
+                      (sum, item) => sum + item.product.price * item.quantity,
+                      0
+                    )
+                    .toLocaleString()}
+                  ₮
+                </p>
+                <Link
+                  href="/cart"
+                  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-md block text-sm"
+                >
+                  Сагс руу очих
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main Content */}
@@ -200,7 +243,7 @@ export default function ProfilePage() {
                           href={`/profile/orders/${order.id}`}
                           className="text-lg font-medium text-blue-600 hover:text-blue-800"
                         >
-                          Захиалга #{order.id.substring(0, 8)}
+                          Захиалга #{order.id}
                         </Link>
                         <p className="text-sm text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString(

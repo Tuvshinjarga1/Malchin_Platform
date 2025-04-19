@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FaShoppingCart } from "react-icons/fa";
+import { FaShoppingCart, FaCheck } from "react-icons/fa";
 import { getApprovedProducts } from "@/lib/products";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
@@ -25,6 +25,14 @@ const ProductGrid = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addedProducts, setAddedProducts] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -50,12 +58,38 @@ const ProductGrid = ({
       }
     };
 
-    fetchProducts();
-  }, [category, limit, subcategory, searchTerm]);
+    if (isClient) {
+      fetchProducts();
+    }
+  }, [category, limit, subcategory, searchTerm, isClient]);
 
-  const handleAddToCart = (product: Product) => {
-    addToCart(product, 1);
+  const handleAddToCart = (product: Product, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log(
+      "ProductGrid handleAddToCart called for product:",
+      product.title
+    );
+    try {
+      addToCart(product, 1);
+      console.log("Added product to cart successfully");
+
+      // Анимэйшн харуулах
+      setAddedProducts((prev) => ({ ...prev, [product.id]: true }));
+
+      // 1.5 секундын дараа анимэйшн буцаах
+      setTimeout(() => {
+        setAddedProducts((prev) => ({ ...prev, [product.id]: false }));
+      }, 1500);
+    } catch (err) {
+      console.error("Error when adding product to cart:", err);
+    }
   };
+
+  if (!isClient) {
+    return <div className="text-center py-12">Ачааллаж байна...</div>;
+  }
 
   if (loading) {
     return (
@@ -130,14 +164,24 @@ const ProductGrid = ({
           </Link>
           <div className="px-4 pb-4">
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart(product);
-              }}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-md flex items-center justify-center"
+              onClick={(e) => handleAddToCart(product, e)}
+              className={`w-full p-2 rounded-md flex items-center justify-center transition-colors ${
+                addedProducts[product.id]
+                  ? "bg-green-600 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
             >
-              <FaShoppingCart className="h-4 w-4 mr-2" />
-              Сагсанд нэмэх
+              {addedProducts[product.id] ? (
+                <>
+                  <FaCheck className="h-4 w-4 mr-2" />
+                  Нэмэгдлээ
+                </>
+              ) : (
+                <>
+                  <FaShoppingCart className="h-4 w-4 mr-2" />
+                  Сагсанд нэмэх
+                </>
+              )}
             </button>
           </div>
         </div>

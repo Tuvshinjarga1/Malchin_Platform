@@ -233,3 +233,33 @@ export const updateProductStatus = async (
     return { success: false, error: error.message };
   }
 };
+
+// Админ бүх бүтээгдэхүүнийг авах
+export const getAllProducts = async () => {
+  try {
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+
+    const querySnapshot = await getDocs(q);
+    const products: Product[] = [];
+
+    querySnapshot.forEach((doc) => {
+      products.push(doc.data() as Product);
+    });
+
+    return { success: true, products };
+  } catch (error: any) {
+    console.error("Error getting all products:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Бүтээгдэхүүнийг устгах
+export const deleteProduct = async (productId: string) => {
+  try {
+    await deleteDoc(doc(db, "products", productId));
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting product:", error);
+    return { success: false, error: error.message };
+  }
+};

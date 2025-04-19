@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { FaTrash, FaMinus, FaPlus, FaArrowLeft } from "react-icons/fa";
+import {
+  FaTrash,
+  FaMinus,
+  FaPlus,
+  FaArrowLeft,
+  FaSignInAlt,
+} from "react-icons/fa";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } =
@@ -14,6 +20,11 @@ export default function CartPage() {
   const { currentUser } = useAuth();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleCheckout = () => {
     if (!currentUser) {
@@ -23,6 +34,17 @@ export default function CartPage() {
 
     router.push("/checkout");
   };
+
+  if (!isClient) {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-5xl">
+        <h1 className="text-3xl font-bold mb-8">Таны сагс</h1>
+        <div className="bg-white rounded-lg shadow-md p-8">
+          <p className="text-center">Ачааллаж байна...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -172,25 +194,27 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button
-              onClick={handleCheckout}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium"
-              disabled={isProcessing}
-            >
-              {isProcessing ? "Боловсруулж байна..." : "Захиалах"}
-            </button>
-
-            {!currentUser && (
-              <p className="mt-4 text-sm text-gray-500 text-center">
-                Захиалга өгөхийн тулд та{" "}
-                <Link
-                  href="/login?redirect=/checkout"
-                  className="text-blue-600 hover:text-blue-800"
+            {currentUser ? (
+              <button
+                onClick={handleCheckout}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium"
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Боловсруулж байна..." : "Захиалах"}
+              </button>
+            ) : (
+              <div>
+                <button
+                  onClick={() => router.push("/login?redirect=/checkout")}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center"
                 >
-                  нэвтрэх
-                </Link>{" "}
-                шаардлагатай
-              </p>
+                  <FaSignInAlt className="mr-2" />
+                  Нэвтрэх
+                </button>
+                <p className="mt-4 text-sm text-gray-500 text-center">
+                  Захиалга өгөхийн тулд та нэвтрэх шаардлагатай
+                </p>
+              </div>
             )}
           </div>
         </div>

@@ -177,7 +177,10 @@ export const getHerderOrders = async (herderId: string) => {
     const orders: Order[] = [];
 
     querySnapshot.forEach((doc) => {
-      orders.push(doc.data() as Order);
+      orders.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Order);
     });
 
     return { success: true, orders };

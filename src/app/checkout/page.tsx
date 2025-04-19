@@ -11,10 +11,11 @@ import { createOrder } from "@/lib/orders";
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -23,23 +24,29 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!currentUser) {
-      router.push("/login?redirect=/checkout");
-      return;
-    }
+    setIsClient(true);
+  }, []);
 
-    if (items.length === 0) {
-      router.push("/cart");
-      return;
-    }
+  useEffect(() => {
+    if (isClient && !loading) {
+      if (!currentUser) {
+        router.push("/login?redirect=/checkout");
+        return;
+      }
 
-    // Хэрэглэгчийн нэр автоматаар бөглөх
-    setFormData((prev) => ({
-      ...prev,
-      name: currentUser?.name || "",
-      phone: currentUser?.phoneNumber || "",
-    }));
-  }, [currentUser, items.length, router]);
+      if (items.length === 0) {
+        router.push("/cart");
+        return;
+      }
+
+      // Хэрэглэгчийн нэр автоматаар бөглөх
+      setFormData((prev) => ({
+        ...prev,
+        name: currentUser?.name || "",
+        phone: currentUser?.phoneNumber || "",
+      }));
+    }
+  }, [currentUser, items.length, router, loading, isClient]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -94,7 +101,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!currentUser || items.length === 0) {
+  if (!isClient || loading || !currentUser || items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="text-center">Ачаалж байна...</div>
@@ -250,25 +257,19 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-medium mb-4">Захиалгын дүн</h2>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
+            <div className="mt-6 pt-6 border-t">
+              <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Дүн</span>
                 <span>{totalPrice.toLocaleString()}₮</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Хүргэлт</span>
                 <span>Үнэгүй</span>
               </div>
-              <div className="border-t pt-3 mt-3">
-                <div className="flex justify-between font-medium">
-                  <span>Нийт дүн</span>
-                  <span>{totalPrice.toLocaleString()}₮</span>
-                </div>
+              <div className="flex justify-between font-bold text-lg">
+                <span>Нийт дүн</span>
+                <span>{totalPrice.toLocaleString()}₮</span>
               </div>
             </div>
           </div>
